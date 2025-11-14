@@ -221,3 +221,10 @@ Understanding the Superset Points of View
 
 <!-- telemetry/analytics pixel: -->
 <img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=bc1c90cd-bc04-4e11-8c7b-289fb2839492" />
+
+
+build using the following commands
+- sudo docker-compose -f docker-compose-non-dev.yml build superset
+- sudo docker images | grep superset
+- sudo docker tag b2050f336a82 sumedhtare/superset:aws
+- sudo docker push sumedhtare/superset:aws
