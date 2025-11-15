@@ -18,9 +18,9 @@
  */
 
 import cls from 'classnames';
-import { styled, useTheme } from '../../theme';
-import { Loading as LoaderSvg } from '../assets';
+import { styled } from '../../theme';
 import type { LoadingProps, SizeOption } from './types';
+import loadingImage from '../../../../../src/assets/branding/loading.png';
 
 const SIZE_MAP: Record<SizeOption, string> = {
   s: '40px',
@@ -65,30 +65,29 @@ export function Loading({
   size = 'm',
   muted = false,
 }: LoadingProps) {
-  const theme = useTheme();
-
   // Determine size from size prop
   const spinnerSize = SIZE_MAP[size];
 
   // Opacity - muted reduces to 0.25, otherwise full opacity
   const opacity = muted ? 0.25 : 1.0;
 
-  // Render spinner content
-  const renderSpinner = () => {
-    // Precedence: explicit image prop > brandSpinnerSvg > brandSpinnerUrl > default SVG
-    if (image) {
-      return <img src={image} alt="Loading..." />;
-    }
-    if (theme.brandSpinnerSvg) {
-      const svgDataUri = `data:image/svg+xml;base64,${btoa(theme.brandSpinnerSvg)}`;
-      return <img src={svgDataUri} alt="Loading..." />;
-    }
-    if (theme.brandSpinnerUrl) {
-      return <img src={theme.brandSpinnerUrl} alt="Loading..." />;
-    }
-    // Default: use the imported SVG component
-    return <LoaderSvg />;
-  };
+  // // Render spinner content
+  // const renderSpinner = () => {
+  //   // Precedence: explicit image prop > brandSpinnerSvg > brandSpinnerUrl > default SVG
+  //   if (image) {
+  //     return <img src={image} alt="Loading..." />;
+  //   }
+  //   if (theme.brandSpinnerSvg) {
+  //     const svgDataUri = `data:image/svg+xml;base64,${btoa(theme.brandSpinnerSvg)}`;
+  //     return <img src={svgDataUri} alt="Loading..." />;
+  //   }
+  //   if (theme.brandSpinnerUrl) {
+  //     return <img src={theme.brandSpinnerUrl} alt="Loading..." />;
+  //   }
+  //   // Default: use the imported SVG component
+  //   return <LoaderSvg />;
+  // };
+  const renderSpinner = () => <img src={loadingImage} alt="Loading..." />;
 
   return (
     <LoaderWrapper

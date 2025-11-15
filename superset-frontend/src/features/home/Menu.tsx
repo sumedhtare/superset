@@ -28,6 +28,7 @@ import { Icons } from '@superset-ui/core/components/Icons';
 import { Typography } from '@superset-ui/core/components/Typography';
 import { useUiConfig } from 'src/components/UiConfigContext';
 import { URL_PARAMS } from 'src/constants';
+import relificLogo from 'src/assets/branding/relific-logo-horiz.png';
 import {
   MenuObjectChildProps,
   MenuObjectProps,
@@ -163,6 +164,35 @@ export function Menu({
   const theme = useTheme();
 
   useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Security: verify origin matches your allowed parent applications
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://drive-r.relific.io', // production domain
+        'https://devdrive-r.relific.io',
+        'https://devsurve-r.relific.io',
+        'https://surve-r.relific.io',
+      ];
+
+      if (!allowedOrigins.includes(event.origin)) {
+        return;
+      }
+
+      if (event.data.type === 'GET_VERSION') {
+        // Send version info back to the sender (parent window)
+        if (event.source) {
+          (event.source as Window).postMessage(
+            { type: 'VERSION_RESPONSE', version: 'v2' },
+            event.origin,
+          );
+        }
+      }
+    };
+
+    // Add listener on mount
+    window.addEventListener('message', handleMessage);
+
     function handleResize() {
       if (window.innerWidth <= 767) {
         setMenu('inline');
@@ -171,7 +201,10 @@ export function Menu({
     handleResize();
     const windowResize = debounce(() => handleResize(), 10);
     window.addEventListener('resize', windowResize);
-    return () => window.removeEventListener('resize', windowResize);
+    return () => {
+      window.removeEventListener('resize', windowResize);
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   enum Paths {
@@ -285,7 +318,7 @@ export function Menu({
         >
           <Image
             preview={false}
-            src={theme.brandLogoUrl}
+            src={relificLogo}
             alt={theme.brandLogoAlt || 'Apache Superset'}
           />
         </Typography.Link>
@@ -296,7 +329,7 @@ export function Menu({
       // Kept as is for backwards compatibility with the old theme system / superset_config.py
       link = (
         <GenericLink className="navbar-brand" to={brand.path}>
-          <Image preview={false} src={brand.icon} alt={brand.alt} />
+          <Image preview={false} src={relificLogo} alt={brand.alt} />
         </GenericLink>
       );
     } else {
@@ -306,15 +339,21 @@ export function Menu({
           href={brand.path}
           tabIndex={-1}
         >
-          <Image preview={false} src={brand.icon} alt={brand.alt} />
+          <Image preview={false} src={relificLogo} alt={brand.alt} />
         </Typography.Link>
       );
     }
     // ---------------------------------------------------------------------------------
     return <>{link}</>;
   };
+
   return (
-    <StyledHeader className="top" id="main-menu" role="navigation">
+    <StyledHeader
+      className="top"
+      id="main-menu"
+      role="navigation"
+      data-version="v2"
+    >
       <Row>
         <Col md={16} xs={24} style={{ display: 'flex' }}>
           <Tooltip
@@ -387,6 +426,8 @@ export default function MenuWrapper({ data, ...rest }: MenuProps) {
   // Cycle through menu.menu to build out cleanedMenu and settings
   const cleanedMenu: MenuObjectProps[] = [];
   const settings: MenuObjectProps[] = [];
+  let databaseConnectionsItem: MenuObjectProps | null = null;
+
   newMenuData.menu.forEach((item: any) => {
     if (!item) {
       return;
@@ -410,12 +451,37 @@ export default function MenuWrapper({ data, ...rest }: MenuProps) {
       newItem.childs = children;
     }
 
+    // Hide SQL menu item
+    if (item.name === 'SQL Lab') {
+      return;
+    }
+
     if (!settingsMenus.hasOwnProperty(item.name)) {
       cleanedMenu.push(newItem);
     } else {
+      // Extract Database Connections from Data menu to add later
+      if (item.name === 'Data') {
+        const dbConnectionChild = item.childs?.find(
+          (child: any) =>
+            typeof child === 'object' &&
+            child?.label === 'Database Connections',
+        );
+        if (dbConnectionChild) {
+          databaseConnectionsItem = {
+            name: 'Database Connections',
+            label: 'Database Connections',
+            url: dbConnectionChild.url,
+          };
+        }
+      }
       settings.push(newItem);
     }
   });
+
+  // Add Database Connections as the last item in main menu
+  if (databaseConnectionsItem) {
+    cleanedMenu.push(databaseConnectionsItem);
+  }
 
   newMenuData.menu = cleanedMenu;
   newMenuData.settings = settings;
