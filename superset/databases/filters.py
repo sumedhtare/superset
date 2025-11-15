@@ -26,6 +26,7 @@ from sqlalchemy.sql.sqltypes import JSON
 from superset import security_manager
 from superset.models.core import Database
 from superset.views.base import BaseFilter
+from flask_appbuilder.security.sqla.models import User
 
 
 def can_access_databases(view_menu_name: str) -> set[str]:
@@ -42,38 +43,40 @@ class DatabaseFilter(BaseFilter):  # pylint: disable=too-few-public-methods
     # TODO(bogdan): consider caching.
 
     def apply(self, query: Query, value: Any) -> Query:
-        """
-        Dynamic Filters need to be applied to the Query before we filter
-        databases with anything else. This way you can show/hide databases using
-        Feature Flags for example in conjuction with the regular role filtering.
-        If not, if an user has access to all Databases it would skip this dynamic
-        filtering.
-        """
-
+        # 1. Dynamic filters
         if dynamic_filters := current_app.config["EXTRA_DYNAMIC_QUERY_FILTERS"]:
             if dynamic_databases_filter := dynamic_filters.get("databases"):
                 query = dynamic_databases_filter(query)
 
-        # We can proceed with default filtering now
-        if security_manager.can_access_all_databases():
-            return query
-
-        database_perms = security_manager.user_view_menu_names("database_access")
-        catalog_access_databases = can_access_databases("catalog_access")
-        schema_access_databases = can_access_databases("schema_access")
-        datasource_access_databases = can_access_databases("datasource_access")
-        database_names = sorted(
-            catalog_access_databases
-            | schema_access_databases
-            | datasource_access_databases
-        )
-
-        return query.filter(
-            or_(
-                self.model.perm.in_(database_perms),
-                self.model.database_name.in_(database_names),
+        # 2. Superset access control filtering
+        if not security_manager.can_access_all_databases():
+            database_perms = security_manager.user_view_menu_names("database_access")
+            catalog_access_databases = can_access_databases("catalog_access")
+            schema_access_databases = can_access_databases("schema_access")
+            datasource_access_databases = can_access_databases("datasource_access")
+            database_names = sorted(
+                catalog_access_databases
+                | schema_access_databases
+                | datasource_access_databases
             )
-        )
+
+            query = query.filter(
+                or_(
+                    self.model.perm.in_(database_perms),
+                    self.model.database_name.in_(database_names),
+                )
+            )
+
+        # 3. Workspace filter (apply only to final, permitted results)
+        if hasattr(g, "user") and g.user and not security_manager.is_admin():
+            user_lastname = g.user.id
+
+            query = (
+                query.join(Database.created_by)    # uses relationship
+                    .filter(User.id == user_lastname)
+            )
+
+        return query
 
 
 class DatabaseUploadEnabledFilter(BaseFilter):  # pylint: disable=too-few-public-methods

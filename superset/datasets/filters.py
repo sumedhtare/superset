@@ -17,9 +17,12 @@
 from flask_babel import lazy_gettext as _
 from sqlalchemy import not_, or_
 from sqlalchemy.orm.query import Query
+from flask import g
 
 from superset.connectors.sqla.models import SqlaTable
 from superset.views.base import BaseFilter
+from superset import security_manager
+from flask_appbuilder.security.sqla.models import User
 
 
 class DatasetIsNullOrEmptyFilter(BaseFilter):  # pylint: disable=too-few-public-methods
@@ -27,6 +30,12 @@ class DatasetIsNullOrEmptyFilter(BaseFilter):  # pylint: disable=too-few-public-
     arg_name = "dataset_is_null_or_empty"
 
     def apply(self, query: Query, value: bool) -> Query:
+        if hasattr(g, "user") and g.user and not security_manager.is_admin():
+            user_lastname = g.user.last_name
+            query = query.join(SqlaTable.changed_by).filter(
+                User.last_name == user_lastname
+            )
+
         filter_clause = or_(SqlaTable.sql.is_(None), SqlaTable.sql == "")
 
         if not value:
@@ -40,6 +49,12 @@ class DatasetCertifiedFilter(BaseFilter):  # pylint: disable=too-few-public-meth
     arg_name = "dataset_is_certified"
 
     def apply(self, query: Query, value: bool) -> Query:
+        if hasattr(g, "user") and g.user and not security_manager.is_admin():
+            user_lastname = g.user.last_name
+            query = query.join(SqlaTable.changed_by).filter(
+                User.last_name == user_lastname
+            )
+            
         check_value = '%"certification":%'
         if value is True:
             return query.filter(SqlaTable.extra.ilike(check_value))

@@ -20,6 +20,8 @@ from flask_babel import lazy_gettext as _
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.query import Query
+from flask import g
+from flask_appbuilder.security.sqla.models import User
 
 from superset import db, security_manager
 from superset.connectors.sqla import models
@@ -102,6 +104,13 @@ class ChartCertifiedFilter(BaseFilter):  # pylint: disable=too-few-public-method
 class ChartFilter(BaseFilter):  # pylint: disable=too-few-public-methods
     def apply(self, query: Query, value: Any) -> Query:
         if security_manager.can_access_all_datasources():
+            if hasattr(g, "user") and g.user and not security_manager.is_admin():
+                user_id = g.user.id
+
+                query = (
+                    query.join(SqlaTable.created_by)    # uses relationship
+                        .filter(User.id == user_id)
+                )
             return query
 
         table_alias = aliased(SqlaTable)
@@ -109,6 +118,7 @@ class ChartFilter(BaseFilter):  # pylint: disable=too-few-public-methods
         query = query.join(
             models.Database, table_alias.database_id == models.Database.id
         )
+
         return query.filter(get_dataset_access_filters(self.model))
 
 

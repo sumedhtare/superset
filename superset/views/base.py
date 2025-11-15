@@ -659,6 +659,13 @@ class DeleteMixin:  # pylint: disable=too-few-public-methods
 class DatasourceFilter(BaseFilter):  # pylint: disable=too-few-public-methods
     def apply(self, query: Query, value: Any) -> Query:
         if security_manager.can_access_all_datasources():
+            if hasattr(g, "user") and g.user and not security_manager.is_admin():
+                user_id = g.user.id
+
+                query = (
+                    query.join(models.Database.created_by)    # uses relationship
+                        .filter(User.id == user_id)
+                )
             return query
         query = query.join(
             models.Database,
