@@ -22,7 +22,6 @@
 #
 import logging
 import os
-import sys
 
 from celery.schedules import crontab
 from flask_caching.backends.filesystemcache import FileSystemCache
@@ -42,6 +41,8 @@ EXAMPLES_HOST = os.getenv("EXAMPLES_HOST")
 EXAMPLES_PORT = os.getenv("EXAMPLES_PORT")
 EXAMPLES_DB = os.getenv("EXAMPLES_DB")
 
+BUILD_SUPERSET_FRONTEND_IN_DOCKER = True
+
 # The SQLAlchemy connection string.
 SQLALCHEMY_DATABASE_URI = (
     f"{DATABASE_DIALECT}://"
@@ -49,17 +50,11 @@ SQLALCHEMY_DATABASE_URI = (
     f"{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_DB}"
 )
 
-# Use environment variable if set, otherwise construct from components
-# This MUST take precedence over any other configuration
-SQLALCHEMY_EXAMPLES_URI = os.getenv(
-    "SUPERSET__SQLALCHEMY_EXAMPLES_URI",
-    (
-        f"{DATABASE_DIALECT}://"
-        f"{EXAMPLES_USER}:{EXAMPLES_PASSWORD}@"
-        f"{EXAMPLES_HOST}:{EXAMPLES_PORT}/{EXAMPLES_DB}"
-    ),
+SQLALCHEMY_EXAMPLES_URI = (
+    f"{DATABASE_DIALECT}://"
+    f"{EXAMPLES_USER}:{EXAMPLES_PASSWORD}@"
+    f"{EXAMPLES_HOST}:{EXAMPLES_PORT}/{EXAMPLES_DB}"
 )
-
 
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = os.getenv("REDIS_PORT", "6379")
@@ -105,40 +100,54 @@ class CeleryConfig:
 
 CELERY_CONFIG = CeleryConfig
 
-FEATURE_FLAGS = {"ALERT_REPORTS": True}
+FEATURE_FLAGS = {"ALERT_REPORTS": True, "EMBEDDED_SUPERSET": True}
 ALERT_REPORTS_NOTIFICATION_DRY_RUN = True
-WEBDRIVER_BASEURL = f"http://superset_app{os.environ.get('SUPERSET_APP_ROOT', '/')}/"  # When using docker compose baseurl should be http://superset_nginx{ENV{BASEPATH}}/  # noqa: E501
+WEBDRIVER_BASEURL = "http://superset:8088/"  # When using docker compose baseurl should be http://superset_app:8088/
 # The base URL for the email report hyperlinks.
-WEBDRIVER_BASEURL_USER_FRIENDLY = (
-    f"http://localhost:8888/{os.environ.get('SUPERSET_APP_ROOT', '/')}/"
-)
+WEBDRIVER_BASEURL_USER_FRIENDLY = WEBDRIVER_BASEURL
 SQLLAB_CTAS_NO_LIMIT = True
 
-log_level_text = os.getenv("SUPERSET_LOG_LEVEL", "INFO")
-LOG_LEVEL = getattr(logging, log_level_text.upper(), logging.INFO)
+GUEST_ROLE_NAME = "Gamma" 
+GUEST_TOKEN_JWT_SECRET = "PASTE_GENERATED_SECRET_HERE" 
+GUEST_TOKEN_JWT_ALGO = "HS256" 
+GUEST_TOKEN_HEADER_NAME = "X-GuestToken"
+GUEST_TOKEN_JWT_EXP_SECONDS = 3600  # 1 hour
 
-if os.getenv("CYPRESS_CONFIG") == "true":
-    # When running the service as a cypress backend, we need to import the config
-    # located @ tests/integration_tests/superset_test_config.py
-    base_dir = os.path.dirname(__file__)
-    module_folder = os.path.abspath(
-        os.path.join(base_dir, "../../tests/integration_tests/")
-    )
-    sys.path.insert(0, module_folder)
-    from superset_test_config import *  # noqa
+ENABLE_CORS = True
 
-    sys.path.pop(0)
+EMBEDDED_SUPERSET = {
+    "JWT_SECRET": "my-secret-123",
+    "JWT_AUDIENCE": "my-audience",
+    "JWT_ISSUER": "my-app",
+}
 
+CORS_OPTIONS = {
+    "supports_credentials": True,
+    "allow_headers": ["*"],
+    "resources": ["*"],
+    "origins": ["*"],
+        }
+
+TALISMAN_ENABLED = False
+HTTP_HEADERS={"X-Frame-Options":"ALLOWALL"} 
+
+SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SECURE = True 
+SESSION_COOKIE_HTTPONLY = False
+WTF_CSRF_ENABLED = False
+FAB_ADD_SECURITY_API = True
+
+# AUTH_ROLES_SYNC_AT_LOGIN = True
 #
 # Optionally import superset_config_docker.py (which will have been included on
 # the PYTHONPATH) in order to allow for local settings to be overridden
 #
 try:
     import superset_config_docker
-    from superset_config_docker import *  # noqa: F403
+    from superset_config_docker import *  # noqa
 
     logger.info(
-        "Loaded your Docker configuration at [%s]", superset_config_docker.__file__
+        f"Loaded your Docker configuration at " f"[{superset_config_docker.__file__}]"
     )
 except ImportError:
     logger.info("Using default Docker config...")
