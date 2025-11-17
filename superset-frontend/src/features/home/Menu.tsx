@@ -35,6 +35,7 @@ import {
   MenuData,
 } from 'src/types/bootstrapTypes';
 import RightMenu from './RightMenu';
+import { useEmbed } from 'src/hooks/useEmbed';
 
 interface MenuProps {
   data: MenuData;
@@ -162,6 +163,7 @@ export function Menu({
   const screens = useBreakpoint();
   const uiConfig = useUiConfig();
   const theme = useTheme();
+  const embed = useEmbed();
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -397,15 +399,17 @@ export function Menu({
             })}
           </MainNav>
         </Col>
-        <Col md={8} xs={24}>
-          <RightMenu
-            align={screens.md ? 'flex-end' : 'flex-start'}
-            settings={settings}
-            navbarRight={navbarRight}
-            isFrontendRoute={isFrontendRoute}
-            environmentTag={environmentTag}
-          />
-        </Col>
+        {!embed && (
+          <Col md={8} xs={24}>
+            <RightMenu
+              align={screens.md ? 'flex-end' : 'flex-start'}
+              settings={settings}
+              navbarRight={navbarRight}
+              isFrontendRoute={isFrontendRoute}
+              environmentTag={environmentTag}
+            />
+          </Col>
+        )}
       </Row>
     </StyledHeader>
   );

@@ -19,14 +19,14 @@
 import { useState, useEffect, FC, PureComponent, useMemo } from 'react';
 import rison from 'rison';
 import { useSelector } from 'react-redux';
-// import { Link } from 'react-router-dom'; // Not used after hiding dropdowns
+import { Link } from 'react-router-dom'; // Not used after hiding dropdowns
 import { useQueryParams, BooleanParam } from 'use-query-params';
 import { isEmpty } from 'lodash';
 import {
   t,
   styled,
   css,
-  // SupersetTheme, // Not used after hiding Settings dropdown
+  SupersetTheme, // Not used after hiding Settings dropdown
   SupersetClient,
   getExtensionsRegistry,
   useTheme,
@@ -39,9 +39,7 @@ import {
   Typography,
   TelemetryPixel,
 } from '@superset-ui/core/components';
-import type {
-  /* ItemType, */ MenuItem,
-} from '@superset-ui/core/components/Menu';
+import type { ItemType, MenuItem } from '@superset-ui/core/components/Menu';
 import { ensureAppRoot } from 'src/utils/pathUtils';
 import { findPermission } from 'src/utils/findPermission';
 import { isUserAdmin } from 'src/dashboard/util/permissionUtils';
@@ -75,12 +73,12 @@ const StyledDiv = styled.div<{ align: string }>`
 `;
 
 // Not used after hiding Settings dropdown
-// const StyledMenuItemWithIcon = styled.div`
-//   display: flex;
-//   flex-direction: row;
-//   justify-content: space-between;
-//   align-items: center;
-// `;
+const StyledMenuItemWithIcon = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+`;
 
 const StyledAnchor = styled.a`
   padding-right: ${({ theme }) => theme.sizeUnit}px;
@@ -365,235 +363,235 @@ const RightMenu = ({
   // Build main menu items
   const menuItems = useMemo(() => {
     // Build menu items for the new dropdown - COMMENTED OUT (dropdown is hidden)
-    // const buildNewDropdownItems = (): MenuItem[] => {
-    //   const items: MenuItem[] = [];
+    const buildNewDropdownItems = (): MenuItem[] => {
+      const items: MenuItem[] = [];
 
-    //   dropdownItems?.forEach(menu => {
-    //     const canShowChild = menu.childs?.some(
-    //       item => typeof item === 'object' && !!item.perm,
-    //     );
+      dropdownItems?.forEach(menu => {
+        const canShowChild = menu.childs?.some(
+          item => typeof item === 'object' && !!item.perm,
+        );
 
-    //     if (menu.childs) {
-    //       if (canShowChild) {
-    //         const childItems: MenuItem[] = [];
-    //         menu.childs.forEach((item, idx) => {
-    //           if (typeof item !== 'string' && item.name && item.perm) {
-    //             if (idx === 3) {
-    //               childItems.push({ type: 'divider', key: `divider-${idx}` });
-    //             }
-    //             childItems.push(buildMenuItem(item));
-    //           }
-    //         });
+        if (menu.childs) {
+          if (canShowChild) {
+            const childItems: MenuItem[] = [];
+            menu.childs.forEach((item, idx) => {
+              if (typeof item !== 'string' && item.name && item.perm) {
+                if (idx === 3) {
+                  childItems.push({ type: 'divider', key: `divider-${idx}` });
+                }
+                childItems.push(buildMenuItem(item));
+              }
+            });
 
-    //         items.push({
-    //           key: `sub2_${menu.label}`,
-    //           label: menu.label,
-    //           icon: menu.icon,
-    //           children: childItems,
-    //         });
-    //       } else if (menu.url) {
-    //         if (
-    //           findPermission(menu.perm as string, menu.view as string, roles)
-    //         ) {
-    //           items.push({
-    //             key: menu.label,
-    //             label: isFrontendRoute(menu.url) ? (
-    //               <Link to={menu.url || ''}>
-    //                 {menu.icon} {menu.label}
-    //               </Link>
-    //             ) : (
-    //               <Typography.Link href={ensureAppRoot(menu.url || '')}>
-    //                 {menu.icon} {menu.label}
-    //               </Typography.Link>
-    //             ),
-    //           });
-    //         }
-    //       }
-    //     } else if (
-    //       findPermission(menu.perm as string, menu.view as string, roles)
-    //     ) {
-    //       items.push({
-    //         key: menu.label,
-    //         label: isFrontendRoute(menu.url) ? (
-    //           <Link to={menu.url || ''}>
-    //             {menu.icon} {menu.label}
-    //           </Link>
-    //         ) : (
-    //           <Typography.Link href={ensureAppRoot(menu.url || '')}>
-    //             {menu.icon} {menu.label}
-    //           </Typography.Link>
-    //         ),
-    //       });
-    //     }
-    //   });
+            items.push({
+              key: `sub2_${menu.label}`,
+              label: menu.label,
+              icon: menu.icon,
+              children: childItems,
+            });
+          } else if (menu.url) {
+            if (
+              findPermission(menu.perm as string, menu.view as string, roles)
+            ) {
+              items.push({
+                key: menu.label,
+                label: isFrontendRoute(menu.url) ? (
+                  <Link to={menu.url || ''}>
+                    {menu.icon} {menu.label}
+                  </Link>
+                ) : (
+                  <Typography.Link href={ensureAppRoot(menu.url || '')}>
+                    {menu.icon} {menu.label}
+                  </Typography.Link>
+                ),
+              });
+            }
+          }
+        } else if (
+          findPermission(menu.perm as string, menu.view as string, roles)
+        ) {
+          items.push({
+            key: menu.label,
+            label: isFrontendRoute(menu.url) ? (
+              <Link to={menu.url || ''}>
+                {menu.icon} {menu.label}
+              </Link>
+            ) : (
+              <Typography.Link href={ensureAppRoot(menu.url || '')}>
+                {menu.icon} {menu.label}
+              </Typography.Link>
+            ),
+          });
+        }
+      });
 
-    //   return items;
-    // };
+      return items;
+    };
 
     // Build settings menu items - COMMENTED OUT (Settings dropdown is hidden)
-    // const buildSettingsMenuItems = (): MenuItem[] => {
-    //   const items: MenuItem[] = [];
+    const buildSettingsMenuItems = (): MenuItem[] => {
+      const items: MenuItem[] = [];
 
-    //   settings?.forEach((section, index) => {
-    //     const sectionItems: MenuItem[] = [];
+      settings?.forEach((section, index) => {
+        const sectionItems: MenuItem[] = [];
 
-    //     section.childs?.forEach(child => {
-    //       if (typeof child !== 'string') {
-    //         const menuItemDisplay = RightMenuItemIconExtension ? (
-    //           <StyledMenuItemWithIcon>
-    //             {child.label}
-    //             <RightMenuItemIconExtension menuChild={child} />
-    //           </StyledMenuItemWithIcon>
-    //         ) : (
-    //           child.label
-    //         );
+        section.childs?.forEach(child => {
+          if (typeof child !== 'string') {
+            const menuItemDisplay = RightMenuItemIconExtension ? (
+              <StyledMenuItemWithIcon>
+                {child.label}
+                <RightMenuItemIconExtension menuChild={child} />
+              </StyledMenuItemWithIcon>
+            ) : (
+              child.label
+            );
 
-    //         sectionItems.push({
-    //           key: child.label,
-    //           label: isFrontendRoute(child.url) ? (
-    //             <Link to={child.url || ''}>{menuItemDisplay}</Link>
-    //           ) : (
-    //             <Typography.Link
-    //               href={child.url || ''}
-    //               css={css`
-    //                 display: flex;
-    //                 align-items: center;
-    //                 line-height: ${theme.sizeUnit * 10}px;
-    //               `}
-    //             >
-    //               {menuItemDisplay}
-    //             </Typography.Link>
-    //           ),
-    //         });
-    //       }
-    //     });
+            sectionItems.push({
+              key: child.label,
+              label: isFrontendRoute(child.url) ? (
+                <Link to={child.url || ''}>{menuItemDisplay}</Link>
+              ) : (
+                <Typography.Link
+                  href={child.url || ''}
+                  css={css`
+                    display: flex;
+                    align-items: center;
+                    line-height: ${theme.sizeUnit * 10}px;
+                  `}
+                >
+                  {menuItemDisplay}
+                </Typography.Link>
+              ),
+            });
+          }
+        });
 
-    //     items.push({
-    //       type: 'group',
-    //       label: section.label,
-    //       key: section.label,
-    //       children: sectionItems,
-    //     });
+        items.push({
+          type: 'group',
+          label: section.label,
+          key: section.label,
+          children: sectionItems,
+        });
 
-    //     if (index < settings.length - 1) {
-    //       items.push({ type: 'divider', key: `divider_${index}` });
-    //     }
-    //   });
+        if (index < settings.length - 1) {
+          items.push({ type: 'divider', key: `divider_${index}` });
+        }
+      });
 
-    //   if (!navbarRight.user_is_anonymous) {
-    //     items.push({ type: 'divider', key: 'user-divider' });
+      if (!navbarRight.user_is_anonymous) {
+        items.push({ type: 'divider', key: 'user-divider' });
 
-    //     const userItems: MenuItem[] = [];
-    //     if (navbarRight.user_info_url) {
-    //       userItems.push({
-    //         key: 'info',
-    //         label: (
-    //           <Typography.Link href={navbarRight.user_info_url}>
-    //             {t('Info')}
-    //           </Typography.Link>
-    //         ),
-    //       });
-    //     }
-    //     userItems.push({
-    //       key: 'logout',
-    //       label: (
-    //         <Typography.Link href={navbarRight.user_logout_url}>
-    //           {t('Logout')}
-    //         </Typography.Link>
-    //       ),
-    //       onClick: handleLogout,
-    //     });
+        const userItems: MenuItem[] = [];
+        if (navbarRight.user_info_url) {
+          userItems.push({
+            key: 'info',
+            label: (
+              <Typography.Link href={navbarRight.user_info_url}>
+                {t('Info')}
+              </Typography.Link>
+            ),
+          });
+        }
+        userItems.push({
+          key: 'logout',
+          label: (
+            <Typography.Link href={navbarRight.user_logout_url}>
+              {t('Logout')}
+            </Typography.Link>
+          ),
+          onClick: handleLogout,
+        });
 
-    //     items.push({
-    //       type: 'group',
-    //       label: t('User'),
-    //       key: 'user-section',
-    //       children: userItems,
-    //     });
-    //   }
+        items.push({
+          type: 'group',
+          label: t('User'),
+          key: 'user-section',
+          children: userItems,
+        });
+      }
 
-    //   if (navbarRight.version_string || navbarRight.version_sha) {
-    //     items.push({ type: 'divider', key: 'version-info-divider' });
+      if (navbarRight.version_string || navbarRight.version_sha) {
+        items.push({ type: 'divider', key: 'version-info-divider' });
 
-    //     const aboutItem: ItemType = {
-    //       type: 'group',
-    //       label: t('About'),
-    //       key: 'about-section',
-    //       children: [
-    //         {
-    //           key: 'about-info',
-    //           style: { height: 'auto', minHeight: 'auto' },
-    //           label: (
-    //             <div
-    //               css={(theme: SupersetTheme) => css`
-    //                 font-size: ${theme.fontSizeSM}px;
-    //                 color: ${theme.colorTextSecondary || theme.colorText};
-    //                 white-space: pre-wrap;
-    //                 padding: ${theme.sizeUnit}px ${theme.sizeUnit * 2}px;
-    //               `}
-    //             >
-    //               {[
-    //                 navbarRight.show_watermark &&
-    //                   t('Powered by Apache Superset'),
-    //                 navbarRight.version_string &&
-    //                   `${t('Version')}: ${navbarRight.version_string}`,
-    //                 navbarRight.version_sha &&
-    //                   `${t('SHA')}: ${navbarRight.version_sha}`,
-    //                 navbarRight.build_number &&
-    //                   `${t('Build')}: ${navbarRight.build_number}`,
-    //               ]
-    //                 .filter(Boolean)
-    //                 .join('\n')}
-    //             </div>
-    //           ),
-    //         },
-    //       ],
-    //     };
-    //     items.push(aboutItem);
-    //   }
-    //   return items;
-    // };
+        const aboutItem: ItemType = {
+          type: 'group',
+          label: t('About'),
+          key: 'about-section',
+          children: [
+            {
+              key: 'about-info',
+              style: { height: 'auto', minHeight: 'auto' },
+              label: (
+                <div
+                  css={(theme: SupersetTheme) => css`
+                    font-size: ${theme.fontSizeSM}px;
+                    color: ${theme.colorTextSecondary || theme.colorText};
+                    white-space: pre-wrap;
+                    padding: ${theme.sizeUnit}px ${theme.sizeUnit * 2}px;
+                  `}
+                >
+                  {[
+                    navbarRight.show_watermark &&
+                      t('Powered by Apache Superset'),
+                    navbarRight.version_string &&
+                      `${t('Version')}: ${navbarRight.version_string}`,
+                    navbarRight.version_sha &&
+                      `${t('SHA')}: ${navbarRight.version_sha}`,
+                    navbarRight.build_number &&
+                      `${t('Build')}: ${navbarRight.build_number}`,
+                  ]
+                    .filter(Boolean)
+                    .join('\n')}
+                </div>
+              ),
+            },
+          ],
+        };
+        items.push(aboutItem);
+      }
+      return items;
+    };
 
     const items: MenuItem[] = [];
 
     // Hide RightMenuExtension
-    // if (RightMenuExtension) {
-    //   items.push({
-    //     key: 'extension',
-    //     label: <RightMenuExtension />,
-    //   });
-    // }
+    if (RightMenuExtension) {
+      items.push({
+        key: 'extension',
+        label: <RightMenuExtension />,
+      });
+    }
 
     // Hide new dropdown (+ button)
-    // if (!navbarRight.user_is_anonymous && showActionDropdown) {
-    //   items.push({
-    //     key: 'new-dropdown',
-    //     label: <Icons.PlusOutlined data-test="new-dropdown-icon" />,
-    //     className: 'submenu-with-caret',
-    //     icon: <Icons.CaretDownOutlined iconSize="xs" />,
-    //     children: buildNewDropdownItems(),
-    //     ...{ 'data-test': 'new-dropdown' },
-    //   });
-    // }
+    if (!navbarRight.user_is_anonymous && showActionDropdown) {
+      items.push({
+        key: 'new-dropdown',
+        label: <Icons.PlusOutlined data-test="new-dropdown-icon" />,
+        className: 'submenu-with-caret',
+        icon: <Icons.CaretDownOutlined iconSize="xs" />,
+        children: buildNewDropdownItems(),
+        ...{ 'data-test': 'new-dropdown' },
+      });
+    }
 
     // Hide theme picker
-    // if (canSetMode()) {
-    //   items.push(themeMenuItem);
-    // }
+    if (canSetMode()) {
+      items.push(themeMenuItem);
+    }
 
     // Hide language picker
-    // if (navbarRight.show_language_picker && languageMenuItem) {
-    //   items.push(languageMenuItem);
-    // }
+    if (navbarRight.show_language_picker && languageMenuItem) {
+      items.push(languageMenuItem);
+    }
 
     // Hide Settings dropdown
-    // items.push({
-    //   key: 'settings',
-    //   label: t('Settings'),
-    //   icon: <Icons.CaretDownOutlined iconSize="xs" />,
-    //   children: buildSettingsMenuItems(),
-    //   className: 'submenu-with-caret',
-    // });
+    items.push({
+      key: 'settings',
+      label: t('Settings'),
+      icon: <Icons.CaretDownOutlined iconSize="xs" />,
+      children: buildSettingsMenuItems(),
+      className: 'submenu-with-caret',
+    });
 
     return items;
   }, [

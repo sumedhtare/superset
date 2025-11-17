@@ -125,14 +125,51 @@ export default function Login() {
   }, [dispatch, form]);
 
   useEffect(() => {
-    if (embed) {
-      SupersetClient.postForm(
-        loginEndpoint,
-        { username: 'admin', password: 'admin' },
-        '',
-      );
-    }
-  }, [loginEndpoint, SupersetClient, embed]);
+    if (!embed) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://drive-r.relific.io',
+        'https://devdrive-r.relific.io',
+        'https://devsurve-r.relific.io',
+        'https://surve-r.relific.io',
+      ];
+
+      if (!allowedOrigins.includes(event.origin)) return;
+
+      if (event.data?.type === 'LOGIN_REQUEST') {
+        const encodedPayload = event.data.payload;
+
+        if (!encodedPayload) return;
+
+        let credentials: any;
+        try {
+          const json = atob(encodedPayload);
+          credentials = JSON.parse(json);
+        } catch (err) {
+          console.error('Invalid Base64 payload', err);
+          return;
+        }
+
+        const { username, password } = credentials;
+        if (!username || !password) return;
+
+        SupersetClient.postForm(loginEndpoint, { username, password }, '');
+
+        if (event.source) {
+          (event.source as Window).postMessage(
+            { type: 'LOGIN_RESPONSE', message: 'ok' },
+            event.origin,
+          );
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [embed, loginEndpoint]);
 
   const onFinish = (values: LoginForm) => {
     setLoading(true);
